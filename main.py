@@ -1,16 +1,30 @@
-# This is a sample Python script.
+import requests
+import logging
+import time
+from pages.all_books_page import AllBooksPage
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                    datefmt='%d-%m-%Y %H:%M:%S',
+                    level=logging.INFO,
+                    filename='logs.txt')
+logger = logging.getLogger('scraping')
 
+page_content = requests.get('https://books.toscrape.com/').content
+page = AllBooksPage(page_content)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+_books = []
 
+start = time.time()
+logger.info(f'Going through {page.page_count} pages of books...')
+for page_num in range(page.page_count):
+    page_start = time.time()
+    url = f'http://books.toscrape.com/catalogue/page-{page_num+1}.html'
+    # logger.info(f'Requesting {url}')
+    page_content = requests.get(url).content
+    # logger.debug('Creating AllBooksPage from page content.')
+    page = AllBooksPage(page_content)
+    print(f'{url} took {time.time() - page_start}')
+    _books.extend(page.books)
+print(f'Total took {time.time() - start}')
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+books = _books
